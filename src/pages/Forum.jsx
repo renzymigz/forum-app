@@ -25,13 +25,14 @@ export default function Forum({ user, setUser }) {
   }, [user, page, navigate]);
 
   const loadPosts = async () => {
-    try {
-      const res = await fetchPosts(page);
-      setPosts(res.data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
+  try {
+    const res = await fetchPosts(page);
+    setPosts(Array.isArray(res.data) ? res.data : []);
+  } catch (err) {
+    console.error(err);
+    setPosts([]); 
+  }
+};
 
   const handleCreatePost = async () => {
     if (!newPost.current.value.trim()) return;
@@ -109,25 +110,32 @@ export default function Forum({ user, setUser }) {
           </div>
         </div>
 
-        {posts.map((post) => (
-          <PostCard
-            key={post.id}
-            post={post}
-            user={user}
-            onDelete={async () => {
-              const res = await deletePost(post.id);
-              if (res.data.success) loadPosts();
-            }}
-            onReply={async (reply) => {
-              const res = await replyPost(user.id, post.id, reply);
-              if (res.data.success) loadPosts();
-            }}
-            onDeleteReply={async (id) => {
-              const res = await deleteReply(id);
-              if (res.data.success) loadPosts();
-            }}
-          />
-        ))}
+        {posts.length === 0 ? (
+  <div className="text-center py-10 text-white font-semibold">
+    <i className="fa-solid fa-circle-exclamation pr-2"></i>
+    No posts yet. Be the first to post something!
+  </div>
+) : (
+  posts.map((post) => (
+    <PostCard
+      key={post.id}
+      post={post}
+      user={user}
+      onDelete={async () => {
+        const res = await deletePost(post.id);
+        if (res.data.success) loadPosts();
+      }}
+      onReply={async (reply) => {
+        const res = await replyPost(user.id, post.id, reply);
+        if (res.data.success) loadPosts();
+      }}
+      onDeleteReply={async (id) => {
+        const res = await deleteReply(id);
+        if (res.data.success) loadPosts();
+      }}
+    />
+  ))
+)}
       </div>
     </div>
   );
